@@ -63,6 +63,13 @@ def compute_ptsd_rate(filenames, target_df, goal="classification"):
     print(f"{ptsd} positive samples and {no_ptsd} negative samples.")
     return ptsd / no_ptsd
 
+# def save_train_test(train_split, test_split_path):
+#     return train_path, test_path
+
+# def load_train_test(train_path, test_path):
+#     pass
+#     return train_split, test_split
+
 def train_split(filenames, test_size=0.25):
     source_files = list(set([filename.split('_')[0] for filename in filenames]))
     train, test = train_test_split(source_files, test_size=0.25)
@@ -132,7 +139,14 @@ def get_data(dataset_path='dataset_cut', target_df_path='targets.csv', batch_siz
 if __name__ == "__main__":
     dataset_path = os.path.join('dataset_cut')
     target_df_path = os.path.join('targets.csv')
-    get_data()
+    train_loader, test_loader = get_data()
+    # Plot first spectrogram
+    for X, y in train_loader:
+        tensor_image = X[0]
+        print("Displaying spectrogram of shape", tensor_image.shape)
+        plt.imshow(tensor_image.permute(1, 2, 0))
+        plt.show()
+        break
 
     # daicWOZDataset = DaicWOZDataset(dataset_path, target_df_path)
     # data_loader = torch.utils.data.DataLoader(daicWOZDataset, batch_size=16, shuffle=True)

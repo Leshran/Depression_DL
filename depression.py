@@ -33,6 +33,7 @@ class ModelManager():
             epoch_start_time = time.time()
             batches_start_time = time.time()
             for step, (X, y) in enumerate(self.train_loader): # for each training step
+                print(X.shape, y.shape)
                 X, y = X.float(), y.float() # Convert as they're stored as doubles
                 X, y = Variable(X).to(self.device), Variable(y).to(self.device) # Bring to GPU
                 prediction = self.model(X)     # input x and predict based on x
@@ -59,7 +60,6 @@ class ModelManager():
         correct = 0
         eval_start_time = time.time()
         with torch.no_grad():
-            # for _, (X, y) in enumerate(self.test_loader):
             for X, y in self.test_loader:
                 X, y = X.float(), y.float() # Convert as they're stored as doubles
                 X, y = Variable(X).to(self.device), Variable(y).to(self.device) # Bring to GPU
