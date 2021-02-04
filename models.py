@@ -73,6 +73,7 @@ class Identity(nn.Module):
             self.fc = nn.Sequential(
                         nn.Linear(512, 256),
                         nn.ReLU(),
+                        nn.Dropout(p=0.3),
                         nn.Linear(256, 32),
                         nn.ReLU(),
                         nn.Linear(32, 1),

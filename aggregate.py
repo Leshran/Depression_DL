@@ -20,19 +20,25 @@ TODO:
 - Have the evaluator handle all the data from a batch
 '''
     
-def display_predictions(predictions, labels):
+def display_predictions(predictions, labels, goal):
     # predictions is a list of tensors
     # labels is a list of tensors
     # Both have the same size
     predictions = np.array(predictions)
     labels = np.array(labels)
-    colors = ['red' if y else 'blue' for y in labels]
-    xaxis = np.array(range(len(labels)))
+    if goal == "classification":
+        xaxis = np.array(range(len(labels)))
+        colors = ['red' if y else 'blue' for y in labels]
+        red_patch = mpatches.Patch(color='red', label='Depressed')
+        blue_patch = mpatches.Patch(color='blue', label='Not Depressed')
+        plt.legend(handles=[red_patch, blue_patch])
+        plt.xlabel("Samples")
+    else:
+        xaxis = labels
+        plt.xlabel("Actual depression score")
+        colors = predictions**2 - labels**2
     plt.scatter(xaxis, predictions, c=colors)
-    red_patch = mpatches.Patch(color='red', label='Depressed')
-    blue_patch = mpatches.Patch(color='blue', label='Not Depressed')
-    plt.legend(handles=[red_patch, blue_patch])
-    plt.ylabel("Predicted depression probability")
+    plt.ylabel("Predicted value")
     plt.show()
 
 def evaluate_predictions(predictions, labels):
@@ -115,7 +121,7 @@ def run(daicWOZDataset, models_path, model_name, goal):
             predictions.append(sample_preds.mean().item())
             labels.append(y.item())
             sample_preds = sample_preds.round()
-    display_predictions(predictions, labels)
+    display_predictions(predictions, labels, goal)
 
     # correct += prediction.eq(y).sum().item()
     # taux_classif = 100. * correct / len(dataset)
@@ -128,12 +134,12 @@ if __name__ == "__main__":
     models_path = os.path.join('models', 'resnet34')
     # goal = "classification"
     goal = "regression"
-    model_name = "3_2021_02_04_13_16"
+    model_name = "3_2021_02_04_13_31"
 
     target_df = pd.read_csv(target_df_path)
     filenames = os.listdir(dataset_path)
     splits_path = "splits"
-    splits_name = "3_2021_02_04_13_07"
+    splits_name = "3_2021_02_04_13_22"
     train_files, test_files = load_data.load_train_test(filenames, splits_path, splits_name)
 
     dataset = AggregatorDataset(test_files, dataset_path, target_df, goal, sample_duration=5)
@@ -154,4 +160,4 @@ if __name__ == "__main__":
     # Xs = list(np.random.random(10))
     # ys = [0,1,0,1,1,0,1,0,1,0]
     # print("Displaying", Xs, ys)
-    # display_predictions(Xs, ys)
+    # display_predictions(Xs, ys, "classification")
