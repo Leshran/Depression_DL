@@ -82,7 +82,7 @@ class AggregatorDataset(Dataset):
         sample, _ = torchaudio.load(file_path)
         mini_batches = self.transformer(sample)
         label = load_data.get_label(filename, self.target_df, goal=self.goal)
-        labels = torch.tensor(label) #.repeat(len(mini_batches), 1) # Make it one label per 5 seconds sample
+        labels = torch.tensor(label)
         # print(f"Batch shapes: {[batch.shape for batch in mini_batches]}")
         return mini_batches, labels
 
@@ -117,7 +117,7 @@ def run(daicWOZDataset, models_path, model_name):
             sample_preds = sample_preds.round()
     display_predictions(predictions, labels)
 
-            # correct += prediction.eq(y).sum().item()
+    # correct += prediction.eq(y).sum().item()
     # taux_classif = 100. * correct / len(dataset)
     # print('Accuracy: {}/{} (tx {:.2f}%, err {:.2f}%)\n'.format(correct, len(dataset), taux_classif, 100.-taux_classif))
     # print(f"Evaluation done in {time.time() - eval_start_time}")
@@ -126,13 +126,15 @@ if __name__ == "__main__":
     dataset_path = os.path.join('dataset')
     target_df_path = os.path.join('targets.csv')
     models_path = os.path.join('models', 'resnet34')
-    model_name = "3_2021_01_28_18_11"
+    model_name = "3_2021_02_04_12_28"
 
     target_df = pd.read_csv(target_df_path)
     filenames = os.listdir(dataset_path)
     splits_path = "splits"
+    splits_name = "3_2021_02_04_12_20"
+    train_files, test_files = load_data.load_train_test(filenames, splits_path, splits_name)
 
-    dataset = AggregatorDataset(filenames, dataset_path, target_df, sample_duration=5)
+    dataset = AggregatorDataset(test_files, dataset_path, target_df, sample_duration=5)
     run(dataset, models_path, model_name)
 
     # # Display spectrogram

@@ -72,7 +72,11 @@ Note that this evaluation was run on the whole dataset, some of which was used a
 # TODO
 - Aggregation on test set
 - Mel spectrograms instead
+- Handle train test with a class to handle the paths and remember them (necessary for full pipeline)
 - Other models
+- Dropout
+- F1-score
+- LSTMs
 - Different aggregation weights
 - Regression
 - VAD

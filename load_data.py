@@ -65,21 +65,34 @@ def compute_ptsd_rate(filenames, target_df, goal="classification"):
     print(f"{ptsd} positive samples and {no_ptsd} negative samples.")
     return ptsd / no_ptsd
 
-def save_train_test(train_files, test_files, splits_path, splits_name):
+def save_train_test(train, test, splits_path, splits_name):
     if splits_name is None:
         splits_name = str(np.random.random())
     train_path = os.path.join(splits_path, splits_name + "_train.txt")
     test_path = os.path.join(splits_path, splits_name + "_test.txt")
     with open(train_path, 'w') as trainfile:
-        json.dump(train_files, trainfile)
+        json.dump(train, trainfile)
     with open(test_path, 'w') as testfile:
-        json.dump(test_files, testfile)
+        json.dump(test, testfile)
     print(f"Train split saved to {train_path} ; train split saved to {test_path}.")
     return train_path, test_path
 
-# TODO
-# def load_train_test(train_path, test_path):
-#     return train_split, test_split
+def load_train_test(filenames, splits_path, splits_name):
+    train_path = os.path.join(splits_path, splits_name + "_train.txt")
+    test_path = os.path.join(splits_path, splits_name + "_test.txt")
+    with open(train_path, 'r') as trainfile: # Load Participant_IDs for train people
+        train = json.load(trainfile)
+    with open(test_path, 'r') as testfile:
+        test = json.load(testfile)
+    train, test = set(train), set(test) # Hashing to speed up lookup time
+    train_files, test_files = [], []
+    for filename in filenames: # Load all train files and test files
+        source_file = filename.split('_')[0]
+        if source_file in train:
+            train_files.append(filename)
+        else:
+            test_files.append(filename)
+    return train_files, test_files
 
 def train_split(filenames, test_size=0.25, splits_path="splits", splits_name=None):
     source_files = list(set([filename.split('_')[0] for filename in filenames]))
@@ -94,7 +107,8 @@ def train_split(filenames, test_size=0.25, splits_path="splits", splits_name=Non
             train_files.append(filename)
         else:
             test_files.append(filename)
-    save_train_test(train_files, test_files, splits_path, splits_name)
+    train, test = list(train), list(test)
+    train_path, test_path = save_train_test(train, test, splits_path, splits_name)
     return train_files, test_files
 
 class DaicWOZDataset(Dataset):

@@ -75,7 +75,7 @@ class Identity(nn.Module):
 
 def resnet():
     # TODO: think of a way such that predictions start at random between 0 and 1
-    model = torchvision.models.resnet34(pretrained=True)
+    model = torchvision.models.resnet34(pretrained=False)
     # for param in model.parameters():
         # param.requires_grad = False
     new_fc = Identity()
