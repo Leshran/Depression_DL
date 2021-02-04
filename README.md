@@ -74,12 +74,12 @@ We may now improve everything a bit:
 - We switch to a regression task
 
 # TODO
+- Regression
 - F1-score
-- Other models
+- Other models - waveRNN ?
 - Dropout
 - LSTMs
 - Different aggregation weights
-- Regression
 - VAD
 - Fine-tuning
 - Handle train test with a class to handle the paths and remember them (necessary for full pipeline)

@@ -41,7 +41,7 @@ def evaluate_predictions(predictions, labels):
     pass
 
 class AggregatorDataset(Dataset):
-    def __init__(self, filenames, dataset_path, target_df, sample_duration, goal="classification"):
+    def __init__(self, filenames, dataset_path, target_df, goal, sample_duration):
         self.dataset_path = dataset_path
         self.target_df = target_df
         self.filenames = filenames
@@ -86,12 +86,12 @@ class AggregatorDataset(Dataset):
         # print(f"Batch shapes: {[batch.shape for batch in mini_batches]}")
         return mini_batches, labels
 
-def run(daicWOZDataset, models_path, model_name):
+def run(daicWOZDataset, models_path, model_name, goal):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     print(f"Running on {device}.")
 
     # model = models.cnn()
-    model = models.resnet()
+    model = models.resnet(goal)
     model.load_state_dict(torch.load(os.path.join(models_path, model_name)))
     print("Loaded model", model_name)
 
@@ -126,17 +126,19 @@ if __name__ == "__main__":
     dataset_path = os.path.join('dataset')
     target_df_path = os.path.join('targets.csv')
     models_path = os.path.join('models', 'resnet34')
-    model_name = "3_2021_02_04_12_44"
+    # goal = "classification"
+    goal = "regression"
+    model_name = "3_2021_02_04_13_16"
 
     target_df = pd.read_csv(target_df_path)
     filenames = os.listdir(dataset_path)
     splits_path = "splits"
-    splits_name = "3_2021_02_04_12_35"
+    splits_name = "3_2021_02_04_13_07"
     train_files, test_files = load_data.load_train_test(filenames, splits_path, splits_name)
 
-    dataset = AggregatorDataset(test_files, dataset_path, target_df, sample_duration=5)
+    dataset = AggregatorDataset(test_files, dataset_path, target_df, goal, sample_duration=5)
     ## Aggregate
-    run(dataset, models_path, model_name)
+    run(dataset, models_path, model_name, goal)
 
     ## Display spectrogram
     # for batch, y in dataset:

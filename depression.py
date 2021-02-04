@@ -12,20 +12,21 @@ import time
 import datetime
 
 class ModelManager():
-    def __init__(self, model, device, train_loader, test_loader):
+    def __init__(self, model, device, train_loader, test_loader, goal):
         self.model = model
         self.device = device
         self.train_loader = train_loader
         self.test_loader = test_loader
+        self.goal = goal
+        if goal == "classification":
+            self.criterion = nn.BCEWithLogitsLoss() # Classification - Binary Cross Entropy
+        else:
+            self.criterion = nn.MSELoss() # Regression - Mean Squared Error
     
     def train(self):
         self.model.train()
         # optimizer = torch.optim.SGD(self.model.parameters(), lr = 0.01, momentum=0.9) # try lr=0.01, momentum=0.9
         optimizer = torch.optim.Adam(self.model.parameters())
-
-        # criterion = nn.MSELoss() # Regression - Mean Squared Error
-        if goal == "classification":
-            criterion = nn.BCEWithLogitsLoss() # Classification - Binary Cross Entropy
         
         epoch_losses = []
         for epoch in range(1, epochs + 1):
@@ -36,7 +37,7 @@ class ModelManager():
                 X, y = X.float(), y.float() # Convert as they're stored as doubles
                 X, y = Variable(X).to(self.device), Variable(y).to(self.device) # Bring to GPU
                 prediction = self.model(X)     # input x and predict based on x
-                loss = criterion(prediction, y)     # compute loss
+                loss = self.criterion(prediction, y)     # compute loss
                 epoch_loss += loss.item() * prediction.shape[0]
                 optimizer.zero_grad()   # clear gradients for next train
                 loss.backward()         # backpropagate
@@ -79,20 +80,21 @@ def run(epochs, models_path, splits_path, splits_name, goal="classification", lo
     print(f"Dataset loaded in {time.time()-t0:.3f}s")
     
     # model = models.cnn()
-    model = models.resnet()
+    model = models.resnet(goal)
     if load_model:
         model.load_state_dict(torch.load(os.path.join(models_path, load_model)))
         print("Loaded model", load_model)
 
     model.to(device) # puts model on GPU / CPU
-    modelManager = ModelManager(model, device, train_loader, test_loader)
+    modelManager = ModelManager(model, device, train_loader, test_loader, goal)
     modelManager.train()
     modelManager.test()
 
 if __name__ == "__main__": 
     epochs = 3
     models_path = os.path.join('models', 'resnet34')
-    goal = "classification"
+    # goal = "classification"
+    goal = "regression"
     splits_path = "splits"
     splits_name = models.name_model(epochs)
     run(epochs, models_path, splits_path, splits_name, goal=goal)

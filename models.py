@@ -61,36 +61,35 @@ def cnn():
     return model
 
 class Identity(nn.Module):
-    def __init__(self):
+    def __init__(self, goal):
         super().__init__()
-        self.fc = nn.Sequential(
-                      nn.Linear(512, 256),
-                      nn.ReLU(),
-                      nn.Linear(256, 1),
-                      nn.Sigmoid())
+        if goal == "classification":
+            self.fc = nn.Sequential(
+                        nn.Linear(512, 256),
+                        nn.ReLU(),
+                        nn.Linear(256, 1),
+                        nn.Sigmoid())
+        else:
+            self.fc = nn.Sequential(
+                        nn.Linear(512, 256),
+                        nn.ReLU(),
+                        nn.Linear(256, 32),
+                        nn.ReLU(),
+                        nn.Linear(32, 1),
+                        nn.ReLU())
 
     def forward(self, x):
         x = self.fc(x)
         return x
 
-def resnet():
+def resnet(goal):
     # TODO: think of a way such that predictions start at random between 0 and 1
     model = torchvision.models.resnet34(pretrained=False)
     # for param in model.parameters():
         # param.requires_grad = False
-    new_fc = Identity()
+    new_fc = Identity(goal)
     model.fc = new_fc # Replace last layer with a custom one
     return model
-
-def mobilenet():
-    # TODO: think of a way such that predictions start at random between 0 and 1
-    model = torchvision.models.resnet34(pretrained=False, progress=True)
-    return model
-    # for param in model.parameters():
-        # param.requires_grad = False
-    # new_fc = Identity()
-    # model.fc = new_fc # Replace last layer with a custom one
-    # return model
 
 
 if __name__ == "__main__":
