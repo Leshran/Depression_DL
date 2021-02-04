@@ -36,8 +36,10 @@ def display_predictions(predictions, labels, goal):
     else:
         xaxis = labels
         plt.xlabel("Actual depression score")
-        patch = mpatches.Patch(color=plt.cm.viridis(0), label='Perfect prediction')
-        plt.legend(handles=[patch])
+        patch1 = mpatches.Patch(color=plt.cm.viridis(0), label='Great prediction')
+        patch2 = mpatches.Patch(color=plt.cm.viridis(10), label='Decent prediction')
+        patch3 = mpatches.Patch(color=plt.cm.viridis(20), label='Mediocre prediction')
+        plt.legend(handles=[patch1, patch2, patch3])
         colors = (predictions - labels)**2
     plt.scatter(xaxis, predictions, c=colors)
     plt.ylabel("Predicted value")

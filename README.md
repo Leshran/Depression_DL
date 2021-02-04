@@ -72,10 +72,10 @@ Note that this evaluation was run on the whole dataset, some of which was used a
 We may now improve everything a bit:
 - Spectrograms are replaced with MelSpectrograms, which are basically spectrograms with a rescaled amplitude scale, designed to better fit the human ear and voice.
 - We switch to a regression task
+- We introduce Dropout on the last layers (the ones added after transferring from the original model)
 
 # TODO
 - Regression
-- F1-score
 - Other models - waveRNN ?
 - Dropout
 - LSTMs
