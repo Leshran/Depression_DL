@@ -127,7 +127,7 @@ class DaicWOZDataset(Dataset):
     def transformer(self, sample, rgb = True):
         transforms = torch.nn.Sequential(
             torchaudio.transforms.Resample(orig_freq=self.source_sample_rate, new_freq=self.sample_rate),
-            torchaudio.transforms.Spectrogram(),
+            torchaudio.transforms.MelSpectrogram(),
             torchvision.transforms.Resize(self.spectrogram_shape),
         )
         sample = transforms(sample)

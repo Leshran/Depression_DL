@@ -75,7 +75,7 @@ def run(epochs, models_path, splits_path, splits_name, goal="classification", lo
     print(f"Running on {device}.")
 
     t0=time.time()
-    train_loader, test_loader = load_data.get_data(batch_size=16, splits_path = splits_path, splits_name = splits_name, num_workers = 3, goal = goal)
+    train_loader, test_loader = load_data.get_data(batch_size=16, splits_path = splits_path, splits_name = splits_name, num_workers = 2, goal = goal)
     print(f"Dataset loaded in {time.time()-t0:.3f}s")
     
     # model = models.cnn()

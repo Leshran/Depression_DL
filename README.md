@@ -68,17 +68,19 @@ Ideally, we'd have a cleanly split repartition : all of the red dots would be ab
 This isn't the case yet, and we can clearly see that with this model and at this point, no linear classifier will be able to split the data apart between depressed and not depressed. However, the graph still shows that most of the red dots are in the upper part of the graph : the model seems to have an idea who is depressed and who isn't.
 Note that this evaluation was run on the whole dataset, some of which was used as train samples. OOPPS
 
+## Improvements
+We may now improve everything a bit:
+- Spectrograms are replaced with MelSpectrograms, which are basically spectrograms with a rescaled amplitude scale, designed to better fit the human ear and voice.
+- We switch to a regression task
 
 # TODO
-- Aggregation on test set
-- Mel spectrograms instead
-- Handle train test with a class to handle the paths and remember them (necessary for full pipeline)
+- F1-score
 - Other models
 - Dropout
-- F1-score
 - LSTMs
 - Different aggregation weights
 - Regression
 - VAD
 - Fine-tuning
+- Handle train test with a class to handle the paths and remember them (necessary for full pipeline)
 - Early stopping ? (if the loss lets us)

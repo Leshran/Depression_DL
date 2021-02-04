@@ -61,7 +61,7 @@ class AggregatorDataset(Dataset):
 
         transforms = torch.nn.Sequential(
             torchaudio.transforms.Resample(orig_freq=self.source_sample_rate, new_freq=self.sample_rate),
-            torchaudio.transforms.Spectrogram(),
+            torchaudio.transforms.MelSpectrogram(),
             torchvision.transforms.Resize(self.spectrogram_shape),
         )
         full_batch = transforms(full_batch)
@@ -126,20 +126,21 @@ if __name__ == "__main__":
     dataset_path = os.path.join('dataset')
     target_df_path = os.path.join('targets.csv')
     models_path = os.path.join('models', 'resnet34')
-    model_name = "3_2021_02_04_12_28"
+    model_name = "3_2021_02_04_12_44"
 
     target_df = pd.read_csv(target_df_path)
     filenames = os.listdir(dataset_path)
     splits_path = "splits"
-    splits_name = "3_2021_02_04_12_20"
+    splits_name = "3_2021_02_04_12_35"
     train_files, test_files = load_data.load_train_test(filenames, splits_path, splits_name)
 
     dataset = AggregatorDataset(test_files, dataset_path, target_df, sample_duration=5)
+    ## Aggregate
     run(dataset, models_path, model_name)
 
-    # # Display spectrogram
-    # for X, y in dataset:
-    #     # print(X, y)
+    ## Display spectrogram
+    # for batch, y in dataset:
+    #     X = batch[0]
     #     print("Batch with", len(X), "files")
     #     tensor_image = X[0]
     #     print("Displaying spectrogram of shape", tensor_image.shape)
