@@ -18,11 +18,9 @@ TODO:
 - Make a dataloader that feeds these batches 1 by 1, but only takes data from 1 file at a time
 - Have a way for the evaluator to know which file it is from (send X, y, Participant_ID)
 - Have the evaluator handle all the data from a batch
-
 '''
     
 def display_predictions(predictions, labels):
-    print(predictions, labels)
     # predictions is a list of tensors
     # labels is a list of tensors
     # Both have the same size
@@ -31,7 +29,6 @@ def display_predictions(predictions, labels):
     colors = ['red' if y else 'blue' for y in labels]
     xaxis = np.array(range(len(labels)))
     plt.scatter(xaxis, predictions, c=colors)
-    # plt.scatter(minus_samples, labels, c='b', label='not depressed')
     red_patch = mpatches.Patch(color='red', label='Depressed')
     blue_patch = mpatches.Patch(color='blue', label='Not Depressed')
     plt.legend(handles=[red_patch, blue_patch])
@@ -133,11 +130,12 @@ if __name__ == "__main__":
 
     target_df = pd.read_csv(target_df_path)
     filenames = os.listdir(dataset_path)
+    splits_path = "splits"
 
     dataset = AggregatorDataset(filenames, dataset_path, target_df, sample_duration=5)
     run(dataset, models_path, model_name)
 
-    ## Display spectrogram
+    # # Display spectrogram
     # for X, y in dataset:
     #     # print(X, y)
     #     print("Batch with", len(X), "files")

@@ -13,6 +13,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import multiprocessing
 from functools import partial
+import numpy as np
+import json
 
 '''
 TODO:
@@ -63,14 +65,23 @@ def compute_ptsd_rate(filenames, target_df, goal="classification"):
     print(f"{ptsd} positive samples and {no_ptsd} negative samples.")
     return ptsd / no_ptsd
 
-# def save_train_test(train_split, test_split_path):
-#     return train_path, test_path
+def save_train_test(train_files, test_files, splits_path, splits_name):
+    if splits_name is None:
+        splits_name = str(np.random.random())
+    train_path = os.path.join(splits_path, splits_name + "_train.txt")
+    test_path = os.path.join(splits_path, splits_name + "_test.txt")
+    with open(train_path, 'w') as trainfile:
+        json.dump(train_files, trainfile)
+    with open(test_path, 'w') as testfile:
+        json.dump(test_files, testfile)
+    print(f"Train split saved to {train_path} ; train split saved to {test_path}.")
+    return train_path, test_path
 
+# TODO
 # def load_train_test(train_path, test_path):
-#     pass
 #     return train_split, test_split
 
-def train_split(filenames, test_size=0.25):
+def train_split(filenames, test_size=0.25, splits_path="splits", splits_name=None):
     source_files = list(set([filename.split('_')[0] for filename in filenames]))
     train, test = train_test_split(source_files, test_size=0.25)
     train = set(train) # Hashing to speed up lookup time
@@ -83,6 +94,7 @@ def train_split(filenames, test_size=0.25):
             train_files.append(filename)
         else:
             test_files.append(filename)
+    save_train_test(train_files, test_files, splits_path, splits_name)
     return train_files, test_files
 
 class DaicWOZDataset(Dataset):
@@ -122,12 +134,12 @@ class DaicWOZDataset(Dataset):
         labels = get_label(filename, self.target_df, goal=self.goal)
         return sample, labels
 
-def get_data(dataset_path='dataset_cut', target_df_path='targets.csv', batch_size=16, shuffle=True, num_workers=0, goal="classification"):
+def get_data(dataset_path='dataset_cut', target_df_path='targets.csv', batch_size=16, shuffle=True, num_workers=0, splits_path='splits', splits_name=None, goal="classification"):
     filenames = os.listdir(dataset_path)
     target_df = pd.read_csv(target_df_path)
     filenames = balance_classes(filenames, target_df)
     # ptsd_rate = compute_ptsd_rate(filenames, target_df)
-    train_files, test_files = train_split(filenames)
+    train_files, test_files = train_split(filenames,  splits_path=splits_path, splits_name=splits_name)
 
     train_dataset = DaicWOZDataset(train_files, dataset_path, target_df, goal=goal)
     test_dataset = DaicWOZDataset(test_files, dataset_path, target_df, goal=goal)
@@ -140,6 +152,7 @@ if __name__ == "__main__":
     dataset_path = os.path.join('dataset_cut')
     target_df_path = os.path.join('targets.csv')
     train_loader, test_loader = get_data()
+
     # Plot first spectrogram
     for X, y in train_loader:
         tensor_image = X[0]

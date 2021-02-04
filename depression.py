@@ -33,7 +33,6 @@ class ModelManager():
             epoch_start_time = time.time()
             batches_start_time = time.time()
             for step, (X, y) in enumerate(self.train_loader): # for each training step
-                print(X.shape, y.shape)
                 X, y = X.float(), y.float() # Convert as they're stored as doubles
                 X, y = Variable(X).to(self.device), Variable(y).to(self.device) # Bring to GPU
                 prediction = self.model(X)     # input x and predict based on x
@@ -71,12 +70,12 @@ class ModelManager():
         print('Accuracy: {}/{} (tx {:.2f}%, err {:.2f}%)\n'.format(correct, len(self.test_loader.dataset), taux_classif, 100.-taux_classif))
         print(f"Evaluation done in {time.time() - eval_start_time}")
 
-def run(epochs, models_path, goal="classification", load_model=None):
+def run(epochs, models_path, splits_path, splits_name, goal="classification", load_model=None):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     print(f"Running on {device}.")
 
     t0=time.time()
-    train_loader, test_loader = load_data.get_data(batch_size=64, goal = goal)
+    train_loader, test_loader = load_data.get_data(batch_size=16, splits_path = splits_path, splits_name = splits_name, num_workers = 4, goal = goal)
     print(f"Dataset loaded in {time.time()-t0:.3f}s")
     
     # model = models.cnn()
@@ -94,4 +93,6 @@ if __name__ == "__main__":
     epochs = 3
     models_path = os.path.join('models', 'resnet34')
     goal = "classification"
-    run(epochs, models_path, goal=goal)
+    splits_path = "splits"
+    splits_name = models.name_model(epochs)
+    run(epochs, models_path, splits_path, splits_name, goal=goal)

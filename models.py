@@ -8,10 +8,14 @@ import copy
 import datetime
 import os
 
-def save_model(model, models_path, epoch):
+def name_model(epochs):
     now = datetime.datetime.now()
     now_str = now.strftime("%Y_%m_%d_%H_%M")
-    path = os.path.join(models_path, f"{str(epoch)}_{now_str}".replace(' ', '_'))
+    return f"{str(epochs)}_{now_str}".replace(' ', '_')
+
+def save_model(model, models_path, epoch):
+    name = name_model(epoch)
+    path = os.path.join(models_path, name)
     torch.save(model.state_dict(), path)
     print(f"Model saved to {path}.")
 
@@ -45,7 +49,7 @@ class Net(nn.Module):
             nn.Linear(128, 32),
             nn.LeakyReLU(),
             nn.Linear(32, 1)
-        )   
+        )
     def forward(self, x):
         x = self.cnn_layers(x)
         x = x.view(x.size(0), -1)
@@ -60,8 +64,8 @@ class Identity(nn.Module):
     def __init__(self):
         super().__init__()
         self.fc = nn.Sequential(
-                      nn.Linear(512, 256), 
-                      nn.ReLU(), 
+                      nn.Linear(512, 256),
+                      nn.ReLU(),
                       nn.Linear(256, 1),
                       nn.Sigmoid())
 

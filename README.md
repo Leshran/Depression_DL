@@ -22,7 +22,7 @@ Then, converted to RGB to use ResNet
 ## Pre-processing
 Todo
 
-## Transfer learning onto ResNet
+## Model handling - Transfer learning onto ResNet
 We attempt to perform transfer learning using the ResNet34 model
 This model is meant as a 1000-class classifier on 3D images.
 We start by converting our grayscale images to RGB (by copying them into all 3 dimensions)
@@ -37,6 +37,8 @@ Model weight initialization is left as default, which for pytorch is the Xavier 
 The dataset isn't balanced, we have 11213 positive and 24847 negative samples. However, this is not as much of an issue for the regression task, and the BCEWithLogitsLoss can handle this uneven distribution by giving more weight to the positive samples. We're starting with a classification task because it is slightly easier to work with at the beginning. We can however expect slightly higher performances with regression, as all of the information in the classification task is still known in the regression task. Indeed, one person is deemed "depressed" when their depression score is at least 10.
 
 We keep 25% (~9010) samples as test and 75% (~27030) as train.
+
+## Model training
 
 First approach:
     With a homemade very simple CNN, doesn't yield anything
@@ -56,6 +58,8 @@ We this new balance, the complete dataset is effectively 22426 samples, split be
 
 We have a model that seems to be able to train. Although we don't expect much in terms of performances at this point, it is enough to build the complete pipeline.
 
+
+## Aggregation
 We create a new tool: an aggregator. This tool builds its own dataset, very similar to the former one, but with a few differences. It lets us load all of the files that come from a given person as a single batch. This allows us to retrieve the predictions of our model on every of those samples. The goal is then to aggregate that data, using statistical tools to compute the original depression score / status.
 
 <classification_resnet_1.png>
@@ -63,3 +67,14 @@ We get this graph after aggregation. Each dot corresponds to one participant, wh
 Ideally, we'd have a cleanly split repartition : all of the red dots would be above a given horizontal line (the 50% threshold would be the ideal case), while all of the blue ones would be under it. 
 This isn't the case yet, and we can clearly see that with this model and at this point, no linear classifier will be able to split the data apart between depressed and not depressed. However, the graph still shows that most of the red dots are in the upper part of the graph : the model seems to have an idea who is depressed and who isn't.
 Note that this evaluation was run on the whole dataset, some of which was used as train samples. OOPPS
+
+
+# TODO
+- Aggregation on test set
+- Mel spectrograms instead
+- Other models
+- Different aggregation weights
+- Regression
+- VAD
+- Fine-tuning
+- Early stopping ? (if the loss lets us)
