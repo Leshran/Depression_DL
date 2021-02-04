@@ -36,7 +36,9 @@ def display_predictions(predictions, labels, goal):
     else:
         xaxis = labels
         plt.xlabel("Actual depression score")
-        colors = predictions**2 - labels**2
+        patch = mpatches.Patch(color=plt.cm.viridis(0), label='Perfect prediction')
+        plt.legend(handles=[patch])
+        colors = (predictions - labels)**2
     plt.scatter(xaxis, predictions, c=colors)
     plt.ylabel("Predicted value")
     plt.show()
@@ -156,8 +158,8 @@ if __name__ == "__main__":
     #     plt.show()
     #     break
 
-    ## Display graph
+    # Display graph
     # Xs = list(np.random.random(10))
     # ys = [0,1,0,1,1,0,1,0,1,0]
     # print("Displaying", Xs, ys)
-    # display_predictions(Xs, ys, "classification")
+    # display_predictions(Xs, ys, "regression")
