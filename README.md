@@ -73,6 +73,11 @@ We may now improve everything a bit:
 - Spectrograms are replaced with MelSpectrograms, which are basically spectrograms with a rescaled amplitude scale, designed to better fit the human ear and voice.
 - We switch to a regression task
 - We introduce Dropout on the last layers (the ones added after transferring from the original model)
+- We switch from Resnet34 to Resnet50
+
+This depression recognition is essentially a form of pattern recognition here: recognizing the deformation caused by depression on a human's voice. Hence, we can assume that ResNet has a hope of reaching decent accuracies. However, Resnets are trained to recognize real-world shapes : ears, wheels, etc, whereas we must recognize some spectrogram-world shapes here. This is quite different.
+
+- We 
 
 # TODO
 - Regression
