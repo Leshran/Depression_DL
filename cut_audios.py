@@ -19,11 +19,11 @@ class Cutter():
         sample_length = int(sample_rate * sample_duration)
         
         sample, source_sample_rate = torchaudio.load(os.path.join(self.dataset_path, filename))
+
         sample = torchaudio.transforms.Resample(orig_freq=source_sample_rate, new_freq=sample_rate)(sample)
         samples = torch.split(sample, sample_length, 1)
         samples = samples[:-1]
         for k, new_sample in enumerate(samples):
-            # May try to perform VAD here
             output_file_name = filename.replace('.wav', f"_{k}.wav")
             output_file_path = os.path.join(self.output_dataset_path, output_file_name)
             torchaudio.save(output_file_path, new_sample, sample_rate)
@@ -51,7 +51,7 @@ def run(dataset_path, output_dataset_path, batch_length=4):
         cutter.run_batch(batch)
 
 if __name__ == "__main__":
-    dataset_path = os.path.join('dataset')
+    dataset_path = os.path.join('dataset_vad')
     output_dataset_path = os.path.join('dataset_cut')
 
     run(dataset_path, output_dataset_path)

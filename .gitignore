@@ -1,0 +1,10 @@
+dataset/
+dataset_cut/
+/data_mnist
+/.vscode
+models/
+splits/
+__pycache__/
+mnist_MLP_CNN_pytorch.py 
+targets.csv
+dataset_vad/

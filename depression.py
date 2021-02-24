@@ -25,11 +25,11 @@ class ModelManager():
         else:
             self.criterion = nn.MSELoss() # Regression - Mean Squared Error
     
-    def train(self, epochs):
+    def train(self, epochs, verbose=False):
         self.model.train()
         optimizer = torch.optim.AdamW([
-            {'params': self.model.resnet50.parameters(), 'lr': 0.001}, # Low learning rate for the pretrained layers
-            {'params': self.model.fc.parameters(), 'lr': 0.01}  # Higher learning rate for the final classifying layers
+            {'params': self.model.resnet50.parameters(), 'lr': 0.0005}, # Low learning rate for the pretrained layers
+            {'params': self.model.fc.parameters(), 'lr': 0.001}  # Higher learning rate for the final classifying layers
         ])
         
         epoch_losses = []
@@ -51,13 +51,14 @@ class ModelManager():
                 batch_duration = time.time() - batch_start_time
                 batch_start_time = time.time()
                 print(f"Epoch {epoch} - ({step*len(X)}/{len(self.train_loader.dataset)}) - Loss: {loss.item():.3f} - {batch_duration:.3f}s")
-                if step % 100 == 0:
+                if step % 10 == 0 and verbose:
                     print(f"Epoch {epoch} - ({step*len(X)}/{len(self.train_loader.dataset)}) - Last prediction: {prediction} vs {y}")
             epoch_time = time.time() - epoch_start_time
             epoch_losses.append(epoch_loss)
             print(f"Epoch {epoch} done. Average loss: {(epoch_loss/len(self.train_loader.dataset)):.3f} - {epoch_time:.4f}s")
-            print("Last prediction", prediction)
-            print("Last y", y)
+            if verbose:
+                print("Last prediction", prediction)
+                print("Last y", y)
             models.save_model(self.model, self.models_path, epoch)
         models.save_model(self.model, self.models_path, epoch)
 
@@ -96,11 +97,11 @@ def run(epochs, splits_path, splits_name, goal="classification", load_model=None
 
     model.to(device) # puts model on GPU / CPU
     modelManager = ModelManager(model, models_path, device, train_loader, test_loader, goal)
-    modelManager.train(epochs)
+    modelManager.train(epochs, verbose=False)
     modelManager.test()
 
 if __name__ == "__main__": 
-    epochs = 5
+    epochs = 20
     # goal = "regression"
     goal = "classification"
     splits_path = "splits"

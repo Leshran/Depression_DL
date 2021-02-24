@@ -16,11 +16,6 @@ from functools import partial
 import numpy as np
 import json
 
-'''
-TODO:
-Make two types of loaders, one for regression and one for classification
-'''
-
 def check_device():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('Using device:', device)
@@ -36,7 +31,6 @@ def get_label(filename, target_df, goal="classification"):
     return labels
 
 def balance_classes(filenames, target_df):
-    # Currently unused
     ptsd = []
     no_ptsd = []
     for filename in filenames:
@@ -51,8 +45,11 @@ def balance_classes(filenames, target_df):
         ptsd = np.random.choice(ptsd, len(no_ptsd))
     else:
         no_ptsd = np.random.choice(no_ptsd, len(ptsd))
-    # print(f"After balancing, {len(ptsd)} files with PTSD, {len(no_ptsd)} files without PTSD")
-    return list(ptsd) + list(no_ptsd)
+    
+    ptsd = list(ptsd)
+    no_ptsd = list(no_ptsd)
+    print(f"After balancing, {len(ptsd)} files with PTSD, {len(no_ptsd)} files without PTSD")
+    return ptsd + no_ptsd
 
 def compute_ptsd_rate(filenames, target_df, goal="classification"):  
     ptsd = 0
@@ -96,7 +93,7 @@ def load_train_test(filenames, splits_path, splits_name):
 
 def train_split(filenames, test_size=0.25, splits_path="splits", splits_name=None):
     source_files = list(set([filename.split('_')[0] for filename in filenames]))
-    train, test = train_test_split(source_files, test_size=0.25)
+    train, test = train_test_split(source_files, test_size=test_size)
     train = set(train) # Hashing to speed up lookup time
     test = set(test)
     train_files = []
@@ -152,9 +149,10 @@ def get_data(dataset_path='dataset_cut', target_df_path='targets.csv', batch_siz
     filenames = os.listdir(dataset_path)
     target_df = pd.read_csv(target_df_path)
     filenames = balance_classes(filenames, target_df)
+    
     # ptsd_rate = compute_ptsd_rate(filenames, target_df)
     train_files, test_files = train_split(filenames,  splits_path=splits_path, splits_name=splits_name)
-
+    
     train_dataset = DaicWOZDataset(train_files, dataset_path, target_df, goal=goal)
     test_dataset = DaicWOZDataset(test_files, dataset_path, target_df, goal=goal)
 

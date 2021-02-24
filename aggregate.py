@@ -11,15 +11,8 @@ import matplotlib.patches as mpatches
 import models
 import time
 import numpy as np
+import sklearn
 
-'''
-TODO:
-- cut Aggregator dataset into batches
-- Make a dataloader that feeds these batches 1 by 1, but only takes data from 1 file at a time
-- Have a way for the evaluator to know which file it is from (send X, y, Participant_ID)
-- Have the evaluator handle all the data from a batch
-'''
-    
 def display_predictions(predictions, labels, goal):
     # predictions is a list of tensors
     # labels is a list of tensors
@@ -37,18 +30,34 @@ def display_predictions(predictions, labels, goal):
         xaxis = labels
         plt.xlabel("Actual depression score")
         patch1 = mpatches.Patch(color=plt.cm.viridis(0), label='Great prediction')
-        patch2 = mpatches.Patch(color=plt.cm.viridis(10), label='Decent prediction')
-        patch3 = mpatches.Patch(color=plt.cm.viridis(20), label='Mediocre prediction')
+        patch2 = mpatches.Patch(color=plt.cm.viridis(75), label='Decent prediction')
+        patch3 = mpatches.Patch(color=plt.cm.viridis(150), label='Mediocre prediction')
         plt.legend(handles=[patch1, patch2, patch3])
-        colors = (predictions - labels)**2
+        colors = abs(predictions - labels)
     plt.scatter(xaxis, predictions, c=colors)
     plt.ylabel("Predicted value")
     plt.show()
 
-def evaluate_predictions(predictions, labels):
+def evaluate_predictions(predictions, labels, display):
+    """
     # predictions are a 1D-array containing probabilities of belonging to each class
     # Trains a linear classifier on 1-D, which basically just finds a threshold above which samples are considered "depressed", and under which they aren't
-    pass
+    this function will draw the ROC curve for the predictions and labels and return the area under curve
+    """
+    predictions = np.array(predictions)
+    labels = np.array(labels)
+    fpr, tpr, thresholds = sklearn.metrics.roc_curve(labels, predictions)
+    auc = sklearn.metrics.auc(fpr, tpr)
+    if display:
+        plt.plot(fpr, tpr, label="ROC")
+        plt.plot([0,1], [0,1], '-', label="Random")
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title(f"ROC curve - AUC: {auc}")
+        plt.show()
+    else:
+        print("Predictions got AUC of {auc}")
+    return auc
 
 class AggregatorDataset(Dataset):
     def __init__(self, filenames, dataset_path, target_df, goal, sample_duration):
@@ -87,7 +96,7 @@ class AggregatorDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
         filename = self.filenames[idx]
-        print(f"Preparing batch corresponding to {filename}")
+        # print(f"Preparing batch corresponding to {filename}")
         file_path = os.path.join(self.dataset_path, filename)
         sample, _ = torchaudio.load(file_path)
         mini_batches = self.transformer(sample)
@@ -96,12 +105,12 @@ class AggregatorDataset(Dataset):
         # print(f"Batch shapes: {[batch.shape for batch in mini_batches]}")
         return mini_batches, labels
 
-def run(daicWOZDataset, models_path, model_name, goal):
+def run(dataset, models_path, model_name, goal, display = False):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     print(f"Running on {device}.")
 
     # model = models.cnn()
-    model = models.resnet(goal)
+    model = models.ResNet50(pretrained=True, goal=goal)
     model.load_state_dict(torch.load(os.path.join(models_path, model_name)))
     print("Loaded model", model_name)
 
@@ -111,6 +120,7 @@ def run(daicWOZDataset, models_path, model_name, goal):
     predictions = []
     labels = []
     with torch.no_grad():
+        t0 = time.time()
         for mini_batches, y in dataset: # 1 set of mini_batches corresponds to all the samples from 1 person
             y = y.float()
             y = y.to(device)
@@ -121,11 +131,16 @@ def run(daicWOZDataset, models_path, model_name, goal):
                 out = model(X)
                 sample_preds.append(out)
             sample_preds = torch.cat(sample_preds)
-            print(f"Average sample_preds: {sample_preds.mean():.3f} - real label: {y[0]}")
+            # print(sample_preds, y)
+            # print(f"Average sample_preds: {sample_preds.mean():.3f} - real label: {y[0]}")
             predictions.append(sample_preds.mean().item())
             labels.append(y.item())
             sample_preds = sample_preds.round()
-    display_predictions(predictions, labels, goal)
+    auc = evaluate_predictions(predictions, labels, display)
+    print(f"Evaluation done: auc = {auc} in {time.time()-t0:.3f}")
+    if display:
+        display_predictions(predictions, labels, goal)
+    return auc
 
     # correct += prediction.eq(y).sum().item()
     # taux_classif = 100. * correct / len(dataset)
@@ -135,20 +150,20 @@ def run(daicWOZDataset, models_path, model_name, goal):
 if __name__ == "__main__":
     dataset_path = os.path.join('dataset')
     target_df_path = os.path.join('targets.csv')
-    models_path = os.path.join('models', 'resnet34')
-    # goal = "classification"
-    goal = "regression"
-    model_name = "3_2021_02_04_13_31"
+    models_path = os.path.join('models', 'resnet50')
+    goal = "classification"
+    # goal = "regression"
+    model_name = "20_2021_02_24_15_00"
 
     target_df = pd.read_csv(target_df_path)
     filenames = os.listdir(dataset_path)
     splits_path = "splits"
-    splits_name = "3_2021_02_04_13_22"
-    train_files, test_files = load_data.load_train_test(filenames, splits_path, splits_name)
+    splits_name = "20_2021_02_24_13_56"
+    _, test_files = load_data.load_train_test(filenames, splits_path, splits_name)
 
     dataset = AggregatorDataset(test_files, dataset_path, target_df, goal, sample_duration=5)
     ## Aggregate
-    run(dataset, models_path, model_name, goal)
+    run(dataset, models_path, model_name, goal, display=False)
 
     ## Display spectrogram
     # for batch, y in dataset:
@@ -165,3 +180,9 @@ if __name__ == "__main__":
     # ys = [0,1,0,1,1,0,1,0,1,0]
     # print("Displaying", Xs, ys)
     # display_predictions(Xs, ys, "regression")
+
+    # Evaluate predictions
+    # Xs = list(np.random.random(10))
+    # ys = [0,1,0,1,1,0,1,0,1,0]
+    # print("Evaluating", Xs, ys)
+    # evaluate_predictions(Xs, ys, None)

@@ -14,6 +14,7 @@ def name_model(epochs):
     return f"{str(epochs)}_{now_str}".replace(' ', '_')
 
 def save_model(model, models_path, epoch):
+    os.makedirs(models_path, exist_ok=True)
     name = name_model(epoch)
     path = os.path.join(models_path, name)
     torch.save(model.state_dict(), path)
@@ -83,7 +84,7 @@ class Identity(nn.Module):
         x = self.fc(x)
         return x
 
-def resnet(goal):
+def resnet34(goal):
     # TODO: think of a way such that predictions start at random between 0 and 1
     model = torchvision.models.resnet34(pretrained=False)
     # for param in model.parameters():
@@ -92,9 +93,85 @@ def resnet(goal):
     model.fc = new_fc # Replace last layer with a custom one
     return model
 
+class ResNet50(nn.Module):
+    def __init__(self, pretrained = True, goal = "classification"):
+        super(ResNet50, self).__init__()
+        self.resnet50 = torchvision.models.resnet50(pretrained = pretrained)
+        modules=list(self.resnet50.children())[:-1] # Drop last layer
+        self.resnet50=nn.Sequential(*modules)
+        if goal=="classification":
+            self.fc = nn.Sequential(
+                        nn.Flatten(),
+                        nn.Linear(2048, 256),
+                        nn.LeakyReLU(),
+                        nn.Dropout(p=0.3),
+                        nn.Linear(256, 256),
+                        nn.LeakyReLU(),
+                        nn.Dropout(p=0.3),
+                        nn.Linear(256, 1),
+                        nn.Sigmoid())
+        else:
+            self.fc = nn.Sequential(
+                        nn.Flatten(),
+                        nn.Linear(2048, 256),
+                        nn.LeakyReLU(),
+                        nn.Dropout(p=0.3),
+                        nn.Linear(256, 256),
+                        nn.LeakyReLU(),
+                        nn.Dropout(p=0.3),
+                        nn.Linear(256, 1),
+                        nn.ReLU())
+    
+        # This lets us freeze the first parameters, but the trick of using different learning rates makes it unnecessary
+        # for name, param in self.named_parameters():
+        #     if param.requires_grad:
+        #         if "resnet50" in name:
+        #             param.requires_grad = False
+                    # print("Freezing", name)
+                # else:
+                    # print("Not freezing", name)
+    def forward(self, x):
+        x = self.resnet50(x)
+        x = self.fc(x)
+        return x
+
+##### Squeezenet #####
+# Loading the Squeezenet model from TorchHub
+class SqueezeNetClassifier(nn.Module):
+    def __init__(self, pretrained = True, goal="classification"):
+        super(SqueezeNetClassifier, self).__init__()
+        self.squeezenet = torch.hub.load('pytorch/vision:v0.6.0', 'squeezenet1_1', pretrained)
+        if goal == "classification":
+            self.fc = nn.Sequential(
+                        nn.Linear(1000, 64),
+                        nn.LeakyReLU(),
+                        nn.Dropout(p=0.3),
+                        nn.Linear(64, 1),
+                        nn.Sigmoid())
+        else:
+            self.fc = nn.Sequential(
+                        nn.Linear(1000, 64),
+                        nn.LeakyReLU(),
+                        nn.Dropout(p=0.3),
+                        nn.Linear(64, 1),
+                        nn.ReLU())
+        
+
+    def forward(self, x):
+        x = self.squeezenet(x)
+        x = self.fc(x)
+        return x
 
 if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
-    model = resnet()
+    goal = "classification"
+    model = ResNet50(pretrained = True)
     model.to(device)
-    summary(model, (3, 224, 224))
+
+    # for name, param in model.named_parameters():
+        # print(name, param.data)
+    summary(model, (3, 224,224))
+
+    # model = resnet50(goal)
+    # model.to(device)
+    # summary(model, (3, 224, 224))
