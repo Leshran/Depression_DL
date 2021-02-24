@@ -77,15 +77,24 @@ We may now improve everything a bit:
 
 This depression recognition is essentially a form of pattern recognition here: recognizing the deformation caused by depression on a human's voice. Hence, we can assume that ResNet has a hope of reaching decent accuracies. However, Resnets are trained to recognize real-world shapes : ears, wheels, etc, whereas we must recognize some spectrogram-world shapes here. This is quite different.
 
-- We 
+- We switch to the much smaller Squeezenet to see if it has any potentiel
+- We use AdamW as our new optimizer of choice
+
+## Additional pre processing: VAD
+We add one step in our data processing : before cutting the data, we pass it through a VAD (Voice Activity Detection) system. This attempts to remove parts where no speech is detected. This removes silence, very noisy parts, and natural sounds (doors opening, microphones being setup, etc.). Moreover, as the interviewer's voice is quite low in those samples, it usually gets trimmed out.
+We use WebRTCVAD, an open-source python library to perform this part, using 30-ms frames with some smoothing. WebRTCVAD lets us chose an "aggresivity" from 0 to 3. Simply put, chosing 0 filters silence, but struggles to remove the interviewer's speech, whereas chosing 3 may remove some of the patient's speech. We chose 2, otherwise the interviewer's questions would be too prevalent in the audio. The interviewer can still be heard, but never longer than a few seconds at a time. After a few listens, about 90% of the patient's original speech is kept, though the end of phrases may be cut abruptly. 
+Overall, this step removes about 50% of our dataset, most of which was only just noise. This is not negligible, but is definitely necessary.
+This step may cut phrases abrutply. This renders some of the features used by feature-based algorithms inefficient. Most notably, rate of speech may be correlated with depression, which the model won't be able to use anyway.
 
 # TODO
-- Regression
-- Other models - waveRNN ?
-- Dropout
+- Retrain only last n layers
+- Drop classifying layer
+- Finetune les autres couches avec une régularization qui les force à pas trop bouger
+
+
+- Data augmentation
 - LSTMs
 - Different aggregation weights
-- VAD
 - Fine-tuning
 - Handle train test with a class to handle the paths and remember them (necessary for full pipeline)
-- Early stopping ? (if the loss lets us)
+- Early stopping routine
