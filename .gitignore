@@ -8,3 +8,4 @@ __pycache__/
 mnist_MLP_CNN_pytorch.py 
 targets.csv
 dataset_vad/
+resultats/

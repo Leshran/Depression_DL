@@ -86,6 +86,8 @@ We use WebRTCVAD, an open-source python library to perform this part, using 30-m
 Overall, this step removes about 50% of our dataset, most of which was only just noise. This is not negligible, but is definitely necessary.
 This step may cut phrases abrutply. This renders some of the features used by feature-based algorithms inefficient. Most notably, rate of speech may be correlated with depression, which the model won't be able to use anyway.
 
+We replace the test routine by the aggregation, which has much more sense here.
+The area under the ROC (Accuracy = f(recall)) curve is used instead of the accuracy as the new metric.
 # TODO
 - Retrain only last n layers
 - Drop classifying layer
@@ -99,3 +101,10 @@ This step may cut phrases abrutply. This renders some of the features used by fe
 - Fine-tuning
 - Handle train test with a class to handle the paths and remember them (necessary for full pipeline)
 - Early stopping routine
+
+
+# Upgrades
+Cut samples so that they cover each other (ie 5s, but the last 2s are also in the beginning of the next sample)
+Convolution sur 1 seule dimension ? (mais il faut alors des LSTMs)
+Other, more S.O.T.A methods: LSTMs, Transformers
+Replace the aggregation phase with an LSTM ?
