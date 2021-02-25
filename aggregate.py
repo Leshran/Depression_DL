@@ -55,14 +55,12 @@ def evaluate_predictions(predictions, labels, display):
         plt.ylabel("True Positive Rate")
         plt.title(f"ROC curve - AUC: {auc}")
         plt.show()
-    else:
-        print("Predictions got AUC of {auc}")
     return auc
 
 class AggregatorDataset(Dataset):
-    def __init__(self, filenames, dataset_path, target_df, goal, sample_duration):
+    def __init__(self, filenames, dataset_path="dataset_vad", target_df_path="targets.csv", goal="classification", sample_duration=5):
         self.dataset_path = dataset_path
-        self.target_df = target_df
+        self.target_df = pd.read_csv(target_df_path)
         self.filenames = filenames
         self.goal = goal
         self.sample_duration = sample_duration
@@ -76,7 +74,7 @@ class AggregatorDataset(Dataset):
     def transformer(self, sample, rgb = True, batch_size=16):
         sample_length = int(self.sample_rate * self.sample_duration)
         full_batch = torch.split(sample, sample_length, 1)
-        full_batch = torch.stack(full_batch[:-1]) # Removing the trailing sample, whose size could different from the rest
+        full_batch = torch.stack(full_batch[:-1]) # Removing the trailing sample, whose size could different from the rest. Sorry!
 
         transforms = torch.nn.Sequential(
             torchaudio.transforms.Resample(orig_freq=self.source_sample_rate, new_freq=self.sample_rate),
@@ -105,15 +103,8 @@ class AggregatorDataset(Dataset):
         # print(f"Batch shapes: {[batch.shape for batch in mini_batches]}")
         return mini_batches, labels
 
-def run(dataset, models_path, model_name, goal, display = False):
+def evaluate(dataset, model, goal="classification", display = False):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
-    print(f"Running on {device}.")
-
-    # model = models.cnn()
-    model = models.ResNet50(pretrained=True, goal=goal)
-    model.load_state_dict(torch.load(os.path.join(models_path, model_name)))
-    print("Loaded model", model_name)
-
     model.to(device)
     model.eval()
     # correct = 0
@@ -137,7 +128,7 @@ def run(dataset, models_path, model_name, goal, display = False):
             labels.append(y.item())
             sample_preds = sample_preds.round()
     auc = evaluate_predictions(predictions, labels, display)
-    print(f"Evaluation done: auc = {auc} in {time.time()-t0:.3f}")
+    print(f"Evaluation done. Auc = {auc} - {time.time()-t0:.4f}s")
     if display:
         display_predictions(predictions, labels, goal)
     return auc
@@ -148,22 +139,27 @@ def run(dataset, models_path, model_name, goal, display = False):
     # print(f"Evaluation done in {time.time() - eval_start_time}")
 
 if __name__ == "__main__":
-    dataset_path = os.path.join('dataset')
-    target_df_path = os.path.join('targets.csv')
-    models_path = os.path.join('models', 'resnet50')
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
+    print(f"Running on {device}.")
+
     goal = "classification"
     # goal = "regression"
-    model_name = "20_2021_02_24_15_00"
-
-    target_df = pd.read_csv(target_df_path)
+    
+    dataset_path = os.path.join('dataset')
+    target_df_path = os.path.join('targets.csv')
     filenames = os.listdir(dataset_path)
     splits_path = "splits"
     splits_name = "20_2021_02_24_13_56"
     _, test_files = load_data.load_train_test(filenames, splits_path, splits_name)
+    dataset = AggregatorDataset(test_files, dataset_path, target_df_path, goal, sample_duration=5)
 
-    dataset = AggregatorDataset(test_files, dataset_path, target_df, goal, sample_duration=5)
+    models_path = os.path.join('models', 'resnet50')
+    model = models.ResNet50(pretrained=True, goal=goal)
+    model_name = "20_2021_02_24_15_00"
+    model.load_state_dict(torch.load(os.path.join(models_path, model_name)))
+    print("Loaded model", model_name)
     ## Aggregate
-    run(dataset, models_path, model_name, goal, display=False)
+    evaluate(dataset, model, goal=goal, display=False)
 
     ## Display spectrogram
     # for batch, y in dataset:

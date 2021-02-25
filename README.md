@@ -77,7 +77,7 @@ We may now improve everything a bit:
 
 This depression recognition is essentially a form of pattern recognition here: recognizing the deformation caused by depression on a human's voice. Hence, we can assume that ResNet has a hope of reaching decent accuracies. However, Resnets are trained to recognize real-world shapes : ears, wheels, etc, whereas we must recognize some spectrogram-world shapes here. This is quite different.
 
-- We switch to the much smaller Squeezenet to see if it has any potentiel
+- We attempt to use the smaller SqueezeNet, but with no convincing performances
 - We use AdamW as our new optimizer of choice
 
 ## Additional pre processing: VAD
@@ -91,6 +91,7 @@ This step may cut phrases abrutply. This renders some of the features used by fe
 - Drop classifying layer
 - Finetune les autres couches avec une régularization qui les force à pas trop bouger
 
+- Remove the test loader which is useless, have load_data create the aggregator
 
 - Data augmentation
 - LSTMs

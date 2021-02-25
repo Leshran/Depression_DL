@@ -105,8 +105,10 @@ def train_split(filenames, test_size=0.25, splits_path="splits", splits_name=Non
         else:
             test_files.append(filename)
     train, test = list(train), list(test)
+    train_sources = [source + "_AUDIO.wav" for source in train]
+    test_sources = [source + "_AUDIO.wav" for source in test]
     train_path, test_path = save_train_test(train, test, splits_path, splits_name)
-    return train_files, test_files
+    return train_files, test_files, train_sources, test_sources
 
 class DaicWOZDataset(Dataset):
     def __init__(self, filenames, dataset_path, target_df, goal="classification"):
@@ -151,14 +153,14 @@ def get_data(dataset_path='dataset_cut', target_df_path='targets.csv', batch_siz
     filenames = balance_classes(filenames, target_df)
     
     # ptsd_rate = compute_ptsd_rate(filenames, target_df)
-    train_files, test_files = train_split(filenames,  splits_path=splits_path, splits_name=splits_name)
+    train_files, test_files, train_sources, test_sources = train_split(filenames,  splits_path=splits_path, splits_name=splits_name)
     
     train_dataset = DaicWOZDataset(train_files, dataset_path, target_df, goal=goal)
     test_dataset = DaicWOZDataset(test_files, dataset_path, target_df, goal=goal)
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
-    return train_loader, test_loader
+    return train_loader, test_loader, train_sources, test_sources
 
 if __name__ == "__main__":
     dataset_path = os.path.join('dataset_cut')
