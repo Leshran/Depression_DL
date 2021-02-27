@@ -162,16 +162,41 @@ class SqueezeNetClassifier(nn.Module):
         x = self.fc(x)
         return x
 
+#################### Silero
+## Using Silero Number Detector
+class Silero(nn.Module):
+    def __init__(self, pretrained = True, goal="classification"):
+        super(Silero, self).__init__()
+        model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+                              model='silero_number_detector',
+                              force_reload=True)
+        
+        (get_number_ts, _, self.read_audio, _, _) = utils
+
+        self.silero = model
+        # if goal == "classification":
+        #     self.fc = nn.Sequential(
+        #                 nn.Linear(1000, 64),
+        #                 nn.LeakyReLU(),
+        #                 nn.Dropout(p=0.3),
+        #                 nn.Linear(64, 1),
+        #                 nn.Sigmoid())
+        # else:
+        #     self.fc = nn.Sequential(
+        #                 nn.Linear(1000, 64),
+        #                 nn.LeakyReLU(),
+        #                 nn.Dropout(p=0.3),
+        #                 nn.Linear(64, 1),
+        #                 nn.ReLU())
+        
+
+    def forward(self, x):
+        x = self.silero(x)
+        # x = self.fc(x)
+        return x
 if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     goal = "classification"
-    model = ResNet50(pretrained = True)
+    model = Silero(pretrained = True)
     model.to(device)
-
-    # for name, param in model.named_parameters():
-        # print(name, param.data)
     summary(model, (3, 224,224))
-
-    # model = resnet50(goal)
-    # model.to(device)
-    # summary(model, (3, 224, 224))
