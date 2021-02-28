@@ -89,22 +89,19 @@ This step may cut phrases abrutply. This renders some of the features used by fe
 We replace the test routine by the aggregation, which has much more sense here.
 The area under the ROC (Accuracy = f(recall)) curve is used instead of the accuracy as the new metric.
 # TODO
+- Compare with same pipeline but regression
+- Build samples with windows that cover eachother a bit
+- 1D Convolutions
 - Retrain only last n layers
-- Drop classifying layer
 - Finetune les autres couches avec une régularization qui les force à pas trop bouger
-
-- Remove the test loader which is useless, have load_data create the aggregator
-
 - Data augmentation
 - LSTMs
-- Different aggregation weights
+- Different aggregation weights or methods
 - Fine-tuning
 - Handle train test with a class to handle the paths and remember them (necessary for full pipeline)
 - Early stopping routine
 
 
 # Upgrades
-Cut samples so that they cover each other (ie 5s, but the last 2s are also in the beginning of the next sample)
-Convolution sur 1 seule dimension ? (mais il faut alors des LSTMs)
 Other, more S.O.T.A methods: LSTMs, Transformers
 Replace the aggregation phase with an LSTM ?
