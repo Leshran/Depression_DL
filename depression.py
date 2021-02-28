@@ -23,7 +23,6 @@ class ModelManager():
         self.aggregator = aggregator
         self.goal = goal
         if goal == "classification":
-            # self.criterion = nn.BCEWithLogitsLoss() # Classification - Binary Cross Entropy, converted to the [0, 1] range
             self.criterion = nn.BCELoss() # Classification - Binary Cross Entropy, converted to the [0, 1] range
         else:
             self.criterion = nn.MSELoss() # Regression - Mean Squared Error
@@ -54,8 +53,8 @@ class ModelManager():
                 batch_duration = time.time() - batch_start_time
                 epoch_duration = time.time() - epoch_start_time
                 batch_start_time = time.time()
-                epoch_samples_count += len(X)
-                sys.stdout.write(f"\rEpoch {epoch} - ({epoch_samples_count}/{len(self.train_loader.dataset)}) - Loss: {loss.item():.3f} - epoch: {epoch_duration:.3f}s - step: {batch_duration:.3f}s")
+                epoch_samples_count += len(X) 
+                sys.stdout.write(f"\rEpoch {epoch} - ({epoch_samples_count}/{len(self.train_loader.dataset)}) - Loss: {loss.item():.3f} - epoch: {epoch_duration:.3f}s - step: {batch_duration:.3f}s") # Cute inline logging
                 if step % 10 == 0 and verbose:
                     print(f"Epoch {epoch} - ({epoch_samples_count}/{len(self.train_loader.dataset)}) - Last prediction: {prediction} vs {y}")
             epoch_time = time.time() - epoch_start_time

@@ -86,10 +86,8 @@ class Identity(nn.Module):
         return x
 
 def resnet34(goal):
-    # TODO: think of a way such that predictions start at random between 0 and 1
+    # TODO do that as a superclass
     model = torchvision.models.resnet34(pretrained=False)
-    # for param in model.parameters():
-        # param.requires_grad = False
     new_fc = Identity(goal)
     model.fc = new_fc # Replace last layer with a custom one
     return model
@@ -122,15 +120,6 @@ class ResNet50(nn.Module):
                         nn.Dropout(p=0.3),
                         nn.Linear(256, 1),
                         nn.ReLU())
-    
-        # This lets us freeze the first parameters, but the trick of using different learning rates makes it unnecessary
-        # for name, param in self.named_parameters():
-        #     if param.requires_grad:
-        #         if "resnet50" in name:
-        #             param.requires_grad = False
-                    # print("Freezing", name)
-                # else:
-                    # print("Not freezing", name)
     def forward(self, x):
         x = self.resnet50(x)
         x = self.fc(x)
@@ -156,7 +145,6 @@ class SqueezeNetClassifier(nn.Module):
                         nn.Dropout(p=0.3),
                         nn.Linear(64, 1),
                         nn.ReLU())
-        
 
     def forward(self, x):
         x = self.squeezenet(x)
@@ -167,45 +155,26 @@ class Wav2Letter(nn.Module):
     def __init__(self, pretrained = True, goal = "classification"):
         super(Wav2Letter, self).__init__()
         self.wav2letter = torchaudio.models.Wav2Letter(num_classes=1)
-        # modules=list(self.wav2letter.children())[:-3] # Drop last layer
-        # self.wav2letter=nn.Sequential(*modules)
-        # if goal=="classification":
-        #     self.fc = nn.Sequential(
-        #                 nn.Flatten(),
-        #                 nn.Linear(2048, 256),
-        #                 nn.LeakyReLU(),
-        #                 nn.Dropout(p=0.3),
-        #                 nn.Linear(256, 256),
-        #                 nn.LeakyReLU(),
-        #                 nn.Dropout(p=0.3),
-        #                 nn.Linear(256, 1),
-        #                 nn.Sigmoid())
-        # else:
-        #     self.fc = nn.Sequential(
-        #                 nn.Flatten(),
-        #                 nn.Linear(2048, 256),
-        #                 nn.LeakyReLU(),
-        #                 nn.Dropout(p=0.3),
-        #                 nn.Linear(256, 256),
-        #                 nn.LeakyReLU(),
-        #                 nn.Dropout(p=0.3),
-        #                 nn.Linear(256, 1),
-        #                 nn.ReLU())
     def forward(self, x):
         x = self.wav2letter(x)
-        # x = self.fc(x)
         return x
 
 if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     goal = "classification"
 
-    # filepath = os.path.join("dataset_cut", "384_AUDIO_35.wav")
-    # data, sr = torchaudio.load(filepath)
-    # print(data.shape)
-    # summary(model, data.shape)
-    # print(model(data))
-
     model = ResNet50()
     model.to(device)
     summary(model, (3,224,224))
+
+
+    
+    # Here's how to freeze the first parameters:
+    # Doing the trick with the different learning rates instead at the moment
+    # for name, param in self.named_parameters():
+    #     if param.requires_grad:
+    #         if "resnet50" in name:
+    #             param.requires_grad = False
+                # print("Freezing", name)
+            # else:
+                # print("Not freezing", name)

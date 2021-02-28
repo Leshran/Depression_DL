@@ -32,6 +32,7 @@ class Cutter():
 
     def run_batch(self, batch):
         t0 = time.time()
+        # Multiprocessing causes a memory leak
         # with Pool(processes = len(batch)) as pool:
         #     pool.map(self.cut_audio_file, batch)
         for filename in batch:
