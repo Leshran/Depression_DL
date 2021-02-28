@@ -78,7 +78,7 @@ def display_precision_recall(predictions, labels):
     plt.show()
 
 class AggregatorDataset(Dataset):
-    def __init__(self, filenames, dataset_path="dataset_vad", target_df_path="targets.csv", goal="classification", sample_duration=5):
+    def __init__(self, filenames, dataset_path="dataset_vad", target_df_path="targets.csv", goal="classification", sample_duration=1):
         self.dataset_path = dataset_path
         self.target_df = pd.read_csv(target_df_path)
         self.filenames = filenames
@@ -170,30 +170,30 @@ if __name__ == "__main__":
     target_df_path = os.path.join('targets.csv')
     filenames = os.listdir(dataset_path)
     splits_path = "splits"
-    splits_name = "20_2021_02_25_11_13"
+    splits_name = "5_2021_02_25_23_05"
     _, test_files = load_data.load_train_test(filenames, splits_path, splits_name)
-    dataset = AggregatorDataset(test_files, dataset_path, target_df_path, goal, sample_duration=5)
+    dataset = AggregatorDataset(test_files, dataset_path, target_df_path, goal, sample_duration=1)
 
     models_path = os.path.join('models', 'resnet50')
     model = models.ResNet50(pretrained=True, goal=goal)
-    model_name = "9_2021_02_25_12_29"
+    model_name = "2_2021_02_25_23_39"
     model.load_state_dict(torch.load(os.path.join(models_path, model_name)))
     print("Loaded model", model_name)
 
     ## Aggregate: full evaluation script
-    # evaluate(dataset, model, goal=goal, display=True)
+    evaluate(dataset, model, goal=goal, display=True)
 
     # Display spectrogram
-    for batch, y in dataset:
-        X = batch[0]
-        print("Batch with", len(X), "files")
-        tensor_image = X[4]
-        print("Displaying spectrogram of shape", tensor_image.shape)
-        image = tensor_image[0]
-        print(image.shape)
-        plt.imshow(image, cmap='gnuplot')
-        plt.show()
-        break
+    # for batch, y in dataset:
+    #     X = batch[0]
+    #     print("Batch with", len(X), "files")
+    #     tensor_image = X[4]
+    #     print("Displaying spectrogram of shape", tensor_image.shape)
+    #     image = tensor_image[0]
+    #     print(image.shape)
+    #     plt.imshow(image, cmap='gnuplot')
+    #     plt.show()
+    #     break
 
     # Display graph
     # Xs = list(np.random.random(10))

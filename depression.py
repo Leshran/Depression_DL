@@ -11,6 +11,7 @@ from torch.autograd import Variable
 import os
 import time
 import datetime
+import sys 
 
 class ModelManager():
     def __init__(self, model, models_path, device, train_loader, test_loader, aggregator, goal):
@@ -31,7 +32,7 @@ class ModelManager():
         self.model.train()
         optimizer = torch.optim.AdamW([
             {'params': self.model.resnet50.parameters(), 'lr': 0.001}, # Low learning rate for the pretrained layers
-            {'params': self.model.fc.parameters(), 'lr': 0.005}  # Higher learning rate for the final classifying layers
+            {'params': self.model.fc.parameters(), 'lr': 0.01}  # Higher learning rate for the final classifying layers
         ])
         
         epoch_losses = []
@@ -40,8 +41,7 @@ class ModelManager():
             epoch_loss = 0
             epoch_start_time = time.time()
             batch_start_time = time.time()
-            total_y = 0
-            total_samples = 0
+            epoch_samples_count = 0
             for step, (X, y) in enumerate(self.train_loader): # for each training step
                 X, y = X.float(), y.float() # Convert as they're stored as doubles
                 X, y = Variable(X).to(self.device), Variable(y).to(self.device) # Bring to GPU
@@ -52,13 +52,15 @@ class ModelManager():
                 loss.backward()         # backpropagate
                 optimizer.step()        # apply gradients
                 batch_duration = time.time() - batch_start_time
+                epoch_duration = time.time() - epoch_start_time
                 batch_start_time = time.time()
-                print(f"Epoch {epoch} - ({step*len(X)}/{len(self.train_loader.dataset)}) - Loss: {loss.item():.3f} - {batch_duration:.3f}s")
+                epoch_samples_count += len(X)
+                sys.stdout.write(f"\rEpoch {epoch} - ({epoch_samples_count}/{len(self.train_loader.dataset)}) - Loss: {loss.item():.3f} - epoch: {epoch_duration:.3f}s - step: {batch_duration:.3f}s")
                 if step % 10 == 0 and verbose:
-                    print(f"Epoch {epoch} - ({step*len(X)}/{len(self.train_loader.dataset)}) - Last prediction: {prediction} vs {y}")
+                    print(f"Epoch {epoch} - ({epoch_samples_count}/{len(self.train_loader.dataset)}) - Last prediction: {prediction} vs {y}")
             epoch_time = time.time() - epoch_start_time
             epoch_losses.append(epoch_loss)
-            print(f"Epoch {epoch} done. Average loss: {(epoch_loss/len(self.train_loader.dataset)):.3f} - {epoch_time:.4f}s")
+            print(f"\nEpoch {epoch} done. Average loss: {(epoch_loss/len(self.train_loader.dataset)):.3f} - {epoch_time:.4f}s")
             if verbose:
                 print("Last prediction", prediction)
                 print("Last y", y)
@@ -76,7 +78,7 @@ def run(epochs, splits_path, splits_name, goal="classification", load_model=None
 
     # Build dataset
     t0=time.time()
-    train_loader, test_loader, train_files, test_files = load_data.get_data(batch_size=16, splits_path = splits_path, splits_name = splits_name, num_workers = 0, goal = goal)
+    train_loader, test_loader, train_files, test_files = load_data.get_data(dataset_path=dataset_path, batch_size=32, splits_path = splits_path, splits_name = splits_name, num_workers = 0, goal = goal)
     print(f"Dataset loaded in {time.time()-t0:.3f}s")
 
     # Build aggregating dataset for evaluation
@@ -94,9 +96,10 @@ def run(epochs, splits_path, splits_name, goal="classification", load_model=None
     modelManager.train(epochs, verbose=False)
 
 if __name__ == "__main__": 
-    epochs = 20
+    epochs = 5
     # goal = "regression"
     goal = "classification"
     splits_path = "splits"
+    dataset_path="dataset_cut_1"
     splits_name = models.name_model(epochs)
     run(epochs, splits_path, splits_name, goal=goal)

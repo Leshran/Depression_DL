@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchaudio.models
+import torchaudio
 import torchvision.models
 from torchsummary import summary
 import copy
@@ -161,42 +162,50 @@ class SqueezeNetClassifier(nn.Module):
         x = self.squeezenet(x)
         x = self.fc(x)
         return x
-
-#################### Silero
-## Using Silero Number Detector
-class Silero(nn.Module):
-    def __init__(self, pretrained = True, goal="classification"):
-        super(Silero, self).__init__()
-        model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
-                              model='silero_number_detector',
-                              force_reload=True)
-        
-        (get_number_ts, _, self.read_audio, _, _) = utils
-
-        self.silero = model
-        # if goal == "classification":
+############ Wav2Letter
+class Wav2Letter(nn.Module):
+    def __init__(self, pretrained = True, goal = "classification"):
+        super(Wav2Letter, self).__init__()
+        self.wav2letter = torchaudio.models.Wav2Letter(num_classes=1)
+        # modules=list(self.wav2letter.children())[:-3] # Drop last layer
+        # self.wav2letter=nn.Sequential(*modules)
+        # if goal=="classification":
         #     self.fc = nn.Sequential(
-        #                 nn.Linear(1000, 64),
+        #                 nn.Flatten(),
+        #                 nn.Linear(2048, 256),
         #                 nn.LeakyReLU(),
         #                 nn.Dropout(p=0.3),
-        #                 nn.Linear(64, 1),
+        #                 nn.Linear(256, 256),
+        #                 nn.LeakyReLU(),
+        #                 nn.Dropout(p=0.3),
+        #                 nn.Linear(256, 1),
         #                 nn.Sigmoid())
         # else:
         #     self.fc = nn.Sequential(
-        #                 nn.Linear(1000, 64),
+        #                 nn.Flatten(),
+        #                 nn.Linear(2048, 256),
         #                 nn.LeakyReLU(),
         #                 nn.Dropout(p=0.3),
-        #                 nn.Linear(64, 1),
+        #                 nn.Linear(256, 256),
+        #                 nn.LeakyReLU(),
+        #                 nn.Dropout(p=0.3),
+        #                 nn.Linear(256, 1),
         #                 nn.ReLU())
-        
-
     def forward(self, x):
-        x = self.silero(x)
+        x = self.wav2letter(x)
         # x = self.fc(x)
         return x
+
 if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     goal = "classification"
-    model = Silero(pretrained = True)
+
+    # filepath = os.path.join("dataset_cut", "384_AUDIO_35.wav")
+    # data, sr = torchaudio.load(filepath)
+    # print(data.shape)
+    # summary(model, data.shape)
+    # print(model(data))
+
+    model = ResNet50()
     model.to(device)
-    summary(model, (3, 224,224))
+    summary(model, (3,224,224))

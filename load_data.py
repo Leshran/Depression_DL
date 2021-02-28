@@ -125,6 +125,7 @@ class DaicWOZDataset(Dataset):
 
     def transformer(self, sample, rgb = True):
         transforms = torch.nn.Sequential(
+            
             torchaudio.transforms.Resample(orig_freq=self.source_sample_rate, new_freq=self.sample_rate),
             torchaudio.transforms.MelSpectrogram(),
             torchvision.transforms.Resize(self.spectrogram_shape),
@@ -163,7 +164,7 @@ def get_data(dataset_path='dataset_cut', target_df_path='targets.csv', batch_siz
     return train_loader, test_loader, train_sources, test_sources
 
 if __name__ == "__main__":
-    dataset_path = os.path.join('dataset_cut')
+    dataset_path = os.path.join('dataset_cut_1')
     target_df_path = os.path.join('targets.csv')
     train_loader, test_loader = get_data()
 

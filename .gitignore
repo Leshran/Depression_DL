@@ -1,5 +1,7 @@
 dataset/
 dataset_cut/
+dataset_cut_1/
+resultats/
 /data_mnist
 /.vscode
 models/
@@ -8,4 +10,3 @@ __pycache__/
 mnist_MLP_CNN_pytorch.py 
 targets.csv
 dataset_vad/
-resultats/

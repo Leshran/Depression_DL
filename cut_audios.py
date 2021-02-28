@@ -9,14 +9,15 @@ import soundfile as sf
 import time
 
 class Cutter():
-    def __init__(self, dataset_path, output_dataset_path):
+    def __init__(self, dataset_path, output_dataset_path, sample_duration):
         self.dataset_path = dataset_path
         self.output_dataset_path = output_dataset_path
+        self.sample_duration = sample_duration
 
-    def cut_audio_file(self, filename, sample_rate=8000, sample_duration=5):
+    def cut_audio_file(self, filename, sample_rate=8000):
         print(f"Cutting {filename}")
         t0 = time.time()
-        sample_length = int(sample_rate * sample_duration)
+        sample_length = int(sample_rate * self.sample_duration)
         
         sample, source_sample_rate = torchaudio.load(os.path.join(self.dataset_path, filename))
 
@@ -37,11 +38,11 @@ class Cutter():
             self.cut_audio_file(filename)
         print(f"Batch processed in {time.time()-t0} seconds.")
 
-def run(dataset_path, output_dataset_path, batch_length=4):
+def run(dataset_path, output_dataset_path, batch_length=4, sample_duration=5):
     filenames = os.listdir(dataset_path)
     os.makedirs(os.path.join(output_dataset_path), exist_ok=True)
 
-    cutter = Cutter(dataset_path, output_dataset_path)
+    cutter = Cutter(dataset_path, output_dataset_path, sample_duration)
     batches = []
     for index in range(0, len(filenames), batch_length):
         batch = filenames[index: min(index+batch_length, len(filenames))]
@@ -52,6 +53,7 @@ def run(dataset_path, output_dataset_path, batch_length=4):
 
 if __name__ == "__main__":
     dataset_path = os.path.join('dataset_vad')
-    output_dataset_path = os.path.join('dataset_cut')
+    output_dataset_path = os.path.join('dataset_cut_1')
+    sample_duration=1
 
-    run(dataset_path, output_dataset_path)
+    run(dataset_path, output_dataset_path, sample_duration=sample_duration)
